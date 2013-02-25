@@ -18,9 +18,16 @@ function love.load()
 	circx = 300
 	circy = 300
 	facing = 1
-	playercoords = {x=100, y=100, w=20, h=20}
+	playercoords = {x=100, y=100}
 	player = Collider:addPolygon(playercoords["x"], playercoords["y"], playercoords["x"] + 20, playercoords["y"], playercoords["x"], playercoords["y"] +20, playercoords["x"] + 20, playercoords["x"] + 20)
 	reload = Collider:addRectangle(300, 300, 5, 10)
+	playerbb = Collider:addPolygon(
+									playercoords["x"] -1,	playercoords["y"] + 10, 
+									playercoords["x"] + 10, playercoords["y"] + 21, 
+									playercoords["x"] + 21, playercoords["y"] +10, 
+									playercoords["x"] + 10, playercoords["x"]  -1
+								  )
+	box = Collider:addRectangle(200, 200, 20, 20)
 	bulletSpeed = 250
 	bulletnum = 5
 	bullets = {}
@@ -47,7 +54,6 @@ function love.update(dt)
 	Collider:update(dt)
 
 	for i,v in ipairs(bullets) do
-		--v["dx"] = v["dx"] - v["dx"] * 1 * dt
 		if v["dr"] == 1 then
 			v["x"] = v["x"] + (v["dx"] * dt)
 		elseif v["dr"] == 2 then
@@ -82,20 +88,34 @@ function love.keypressed(key)
 	end
 	if key == "up" then
 		player:move(0, -20)
+		playerbb:move(0, -20)
 		facing = 3
 	end
 	if key == "down" then
 		player:move(0, 20)
+		playerbb:move(0, 20)
 		facing = 4
 	end
 	if key == "left" then
 		player:move(-20, 0)
+		playerbb:move(-20, 0)
 		facing = 2
 	end
 	if key == "right" then
  		player:move(20, 0)
+ 		playerbb:move(20, 0)
 		facing = 1
 	end
+end
+
+function extendXUp()
+--subtract 20 from x1 and 
+end
+function extendYUp()
+end
+function extendYDown()
+end
+function extendYDown()
 end
 
 function shoot()
@@ -111,6 +131,9 @@ end
 
 function on_collide(dt, shape_a, shape_b)
 	if shape_a == player and shape_b == reload or shape_b == player and shape_a == reload then
+		bulletnum = bulletnum + 5
+	end
+	if shape_a == playerbb and shape_b == box or shape_a == box and shape_b == playerbb then
 		bulletnum = bulletnum + 5
 	end
 end
@@ -129,8 +152,13 @@ end
 ]]
 function love.draw()
 	love.graphics.print("Bullets Remaining = " .. bulletnum, 0, 0)
+	x, y, x1, y1 = playerbb:bbox()
+	love.graphics.print("player bounding: tl =" .. x .. y .. x1 .. y1 , 0, 15)
 	reload:draw('fill')
 	player:draw('fill')
+	box:draw('fill')
+	love.graphics.setColor(255,255,255,0)
+	playerbb:draw('fill')
 	love.graphics.setColor(255,255,255,255)
 	for i,v in ipairs(bullets) do
 		love.graphics.circle("fill", v["x"], v["y"], 3)
