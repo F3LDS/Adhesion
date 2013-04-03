@@ -1,6 +1,9 @@
-
-HC = require 'hardoncollider'
 --[[
+*============= Adhesion ==============*
+* Original Author: Alex Felder		  *
+* Date of Creation: 2/20/2013 9:35 AM *
+*=====================================*
+
 
  /$$$$$$           /$$   /$$    
 |_  $$_/          |__/  | $$    
@@ -13,26 +16,25 @@ HC = require 'hardoncollider'
                                 
 ]]
 
+HC = require 'hardoncollider'
+shapes = require "hardoncollider.shapes"
+
 function love.load()
 	Collider = HC(100, on_collide)
-	circx = 300
-	circy = 300
 	facing = 1
 	playercoords = {x=100, y=100}
-	player = Collider:addPolygon(playercoords["x"], playercoords["y"], playercoords["x"] + 20, playercoords["y"], playercoords["x"], playercoords["y"] +20, playercoords["x"] + 20, playercoords["x"] + 20)
+	playerblocks = {}
+	boxblocks = {}
+	--player = shapes.newPolygonShape(playercoords["x"], playercoords["y"], playercoords["x"] + 20, playercoords["y"], playercoords["x"], playercoords["y"] +20, playercoords["x"] + 20, playercoords["x"] + 20)
+	player = Collider:addRectangle(playercoords["x"], playercoords["y"], 20, 20)
 	reload = Collider:addRectangle(300, 300, 5, 10)
-	playerbb = Collider:addPolygon(
-									playercoords["x"] -1,	playercoords["y"] + 10, 
-									playercoords["x"] + 10, playercoords["y"] + 21, 
-									playercoords["x"] + 21, playercoords["y"] +10, 
-									playercoords["x"] + 10, playercoords["x"]  -1
-								  )
+	--playerbb = Collider:addPolygon(getPlayerBB(leftx), getPlayerBB(lefty), getPlayerBB(downx), getPlayerBB(downy), getPlayerBB(rightx), getPlayerBB(righty), getPlayerBB(upx), getPlayerBB(upy))
+	playerbb = Collider:addPolygon(playercoords["x"] -1, playercoords["y"] + 10, playercoords["x"] + 10, playercoords["y"] + 21, playercoords["x"] + 21, playercoords["y"] +10, playercoords["x"] + 10, playercoords["x"]  -1)
 	box = Collider:addRectangle(200, 200, 20, 20)
 	bulletSpeed = 250
 	bulletnum = 5
 	bullets = {}
 	dtotal = 0
-	test = "nope"
 end
 --[[
 
@@ -87,35 +89,29 @@ function love.keypressed(key)
 		shoot()
 	end
 	if key == "up" then
+		--player:move(0, -20)
 		player:move(0, -20)
-		playerbb:move(0, -20)
+		playercoords["y"] = playercoords["y"] - 20
 		facing = 3
 	end
 	if key == "down" then
+		--player:move(0, 20)
 		player:move(0, 20)
-		playerbb:move(0, 20)
+		playercoords["y"] = playercoords["y"] + 20
 		facing = 4
 	end
 	if key == "left" then
+		--player:move(-20, 0)
 		player:move(-20, 0)
-		playerbb:move(-20, 0)
+		playercoords["x"] = playercoords["x"] - 20
 		facing = 2
 	end
 	if key == "right" then
+ 		--player:move(20, 0)
  		player:move(20, 0)
- 		playerbb:move(20, 0)
+ 		playercoords["x"] = playercoords["x"] + 20
 		facing = 1
 	end
-end
-
-function extendXUp()
---subtract 20 from x1 and 
-end
-function extendYUp()
-end
-function extendYDown()
-end
-function extendYDown()
 end
 
 function shoot()
@@ -129,13 +125,41 @@ function shoot()
 	end
 end
 
+function table.Compare( tbl1, tbl2 )
+    for k, v in pairs( tbl1 ) do
+        if ( tbl2[k] != v ) then return false end
+    end
+    for k, v in pairs( tbl2 ) do
+        if ( tbl1[k] != v ) then return false end
+    end
+    return true
+end
+
+--[[
+
+  /$$$$$$            /$$ /$$ /$$           /$$                    
+ /$$__  $$          | $$| $$|__/          |__/                    
+| $$  \__/  /$$$$$$ | $$| $$ /$$  /$$$$$$$ /$$  /$$$$$$  /$$$$$$$ 
+| $$       /$$__  $$| $$| $$| $$ /$$_____/| $$ /$$__  $$| $$__  $$
+| $$      | $$  \ $$| $$| $$| $$|  $$$$$$ | $$| $$  \ $$| $$  \ $$
+| $$    $$| $$  | $$| $$| $$| $$ \____  $$| $$| $$  | $$| $$  | $$
+|  $$$$$$/|  $$$$$$/| $$| $$| $$ /$$$$$$$/| $$|  $$$$$$/| $$  | $$
+ \______/  \______/ |__/|__/|__/|_______/ |__/ \______/ |__/  |__/
+                                                                  
+]]
+
 function on_collide(dt, shape_a, shape_b)
 	if shape_a == player and shape_b == reload or shape_b == player and shape_a == reload then
 		bulletnum = bulletnum + 5
 	end
-	if shape_a == playerbb and shape_b == box or shape_a == box and shape_b == playerbb then
-		bulletnum = bulletnum + 5
+	if shape_a == player and shape_b == box or shape_a == box and shape_b == player then
+		for coordpair_a in playerblocks and coordpair_b in boxblocks do
+			if coordpair_a == coordpair_b
+				print("yo")
 	end
+end
+
+function adhesion()
 end
 
 --[[
@@ -151,13 +175,12 @@ end
                                          
 ]]
 function love.draw()
-	love.graphics.print("Bullets Remaining = " .. bulletnum, 0, 0)
-	x, y, x1, y1 = playerbb:bbox()
-	love.graphics.print("player bounding: tl =" .. x .. y .. x1 .. y1 , 0, 15)
+	love.graphics.print("Bullets Remaining = " .. bulletnum .. "and" .. playercoords["x"], 0, 0)
+	--love.graphics.print("Poly Pack: " .. test, 0, 15)
 	reload:draw('fill')
 	player:draw('fill')
 	box:draw('fill')
-	love.graphics.setColor(255,255,255,0)
+	--love.graphics.setColor(255,255,255,0)
 	playerbb:draw('fill')
 	love.graphics.setColor(255,255,255,255)
 	for i,v in ipairs(bullets) do
