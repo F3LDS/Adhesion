@@ -1,7 +1,7 @@
 --[[
 *============= Adhesion ==============*
 * Original Author: Alex Felder		  *
-* Date of Creation: 2/20/2013 9:35 AM *
+* Date of Creation: 2/30/3013 9:35 AM *
 *=====================================*
 
 
@@ -15,26 +15,20 @@
 |______/|__/  |__/|__/   \___/  
                                 
 ]]
-
-HC = require 'hardoncollider'
-shapes = require "hardoncollider.shapes"
-
 function love.load()
-	Collider = HC(100, on_collide)
 	facing = 1
-	playercoords = {x=100, y=100}
-	playerblocks = {}
+    player = {
+        grid_x = 60,
+        grid_y = 60,
+        act_x = 60,
+        act_y = 60,
+        speed = 30
+    }
 	boxblocks = {}
-	--player = shapes.newPolygonShape(playercoords["x"], playercoords["y"], playercoords["x"] + 20, playercoords["y"], playercoords["x"], playercoords["y"] +20, playercoords["x"] + 20, playercoords["x"] + 20)
-	player = love.graphics.rectangle("fill", playercoords["x"], playercoords["y"], 20, 20)
-	--playerbb = Collider:addPolygon(getPlayerBB(leftx), getPlayerBB(lefty), getPlayerBB(downx), getPlayerBB(downy), getPlayerBB(rightx), getPlayerBB(righty), getPlayerBB(upx), getPlayerBB(upy))
-	bulletSpeed = 250
-	bulletnum = 5
-	bullets = {}
 	dtotal = 0
 
+  loadMap("level1.dat")
 
-	playerblocks.insert((playercoords["x"],playercoords["y"]))
 end
 --[[
 
@@ -53,19 +47,10 @@ end
 
 function love.update(dt)
 	dtotal = dtotal + dt
-	Collider:update(dt)
 
-	for i,v in ipairs(bullets) do
-		if v["dr"] == 1 then
-			v["x"] = v["x"] + (v["dx"] * dt)
-		elseif v["dr"] == 2 then
-			v["x"] = v["x"] - (v["dx"] * dt)
-		elseif v["dr"] == 3 then
-			v["y"] = v["y"] - (v["dy"] * dt)
-		elseif v["dr"] == 4 then
-			v["y"] = v["y"] + (v["dy"] * dt)
-		end
-	end
+    player.act_y = player.act_y - ((player.act_y - player.grid_y) * player.speed * dt)
+    player.act_x = player.act_x - ((player.act_x - player.grid_x) * player.speed * dt)
+
 end
 
 --[[
@@ -89,24 +74,28 @@ function love.keypressed(key)
 		shoot()
 	end
 	if key == "up" then
-		--player:move(0, -20)
-		playercoords["y"] = playercoords["y"] - 20
-		facing = 3
+		if testMap(0, -1) then
+			player.grid_y = player.grid_y - 30
+			facing = 3
+		end
 	end
 	if key == "down" then
-		--player:move(0, 20)
-		playercoords["y"] = playercoords["y"] + 20
-		facing = 4
+		if testMap(0, 1) then
+			player.grid_y = player.grid_y + 30
+			facing = 4
+		end
 	end
 	if key == "left" then
-		--player:move(-20, 0)
-		playercoords["x"] = playercoords["x"] - 20
-		facing = 2
+		if testMap(-1, 0) then
+			player.grid_x = player.grid_x - 30
+			facing = 2
+		end
 	end
 	if key == "right" then
- 		--player:move(20, 0)
- 		playercoords["x"] = playercoords["x"] + 20
-		facing = 1
+		if testMap(1, 0) then
+ 			player.grid_x = player.grid_x + 30
+			facing = 1
+		end
 	end
 end
 
@@ -120,6 +109,47 @@ end
    -- return true
 --end
 
+function testMap(x, y)
+    if map[(player.grid_y / 30) + y][(player.grid_x / 30) + x] == 1 then
+        return false
+    end
+    return true
+end
+
+function loadMap(mapfile)
+  local file = io.open(mapfile, "r");
+  local innertemp = {}
+  local final = {}
+  local linenum = 0
+  for line in file:lines() do -- For each line in the map file
+    linenum = linenum + 1
+    stringline = line -- store it in the stringline variable
+    for i = 1, string.len(stringline) do -- for each character in each line
+      value = string.sub(stringline, i, i) -- store it in the value variable
+      innertemp[#innertemp + 1] = tonumber(value, 10)
+      if #innertemp == string.len(stringline) then
+            final[#final + 1] = innertemp
+            innertemp = {}
+      end
+    end
+  end
+map = final
+end
+
+function printTable(t)
+
+    function printTableHelper(t, spacing)
+        for k,v in pairs(t) do
+            print(spacing..tostring(k), v)
+            if (type(v) == "table") then 
+                printTableHelper(v, spacing.."\t")
+            end
+        end
+    end
+
+    printTableHelper(t, "");
+end
+
 --[[
 
   /$$$$$$            /$$ /$$ /$$           /$$                    
@@ -132,6 +162,7 @@ end
  \______/  \______/ |__/|__/|__/|_______/ |__/ \______/ |__/  |__/
                                                                   
 ]]
+
 
 
 function adhesion()
@@ -150,12 +181,22 @@ end
                                          
 ]]
 function love.draw()
-	love.graphics.print("Coordinates: (" .. playercoords["x"]  .. ", " .. playercoords["y"] .. ")", 0, 0)
-	love.graphics.print("Table Test: " .. playerblocks, 0, 0)
-	--love.graphics.setColor(255,255,255,0)
-	love.graphics.setColor(255,255,255,255)
-	love.graphics.rectangle("fill", playercoords["x"], playercoords["y"], 20, 20)
-	for i,v in ipairs(bullets) do
-		love.graphics.circle("fill", v["x"], v["y"], 3)
-	end
+	--love.graphics.print("Table Test: " .. didPass .. " " .. passNum, 0, 0)
+	
+	love.graphics.setColor(0, 0, 255)
+
+	for y=1, #map do
+     	for x=1, #map[y] do
+          if map[y][x] == 1 then
+            love.graphics.rectangle("fill", x * 30, y * 30, 30, 30)
+          elseif map[y][x] == 2 then
+            love.graphics.setColor(255, 0, 0)
+            love.graphics.rectangle("fill", x * 30, y * 30, 30, 30)
+            love.graphics.setColor(0, 0, 255)
+          end
+      end
+  end
+
+  love.graphics.setColor(255,255,255,255)
+  love.graphics.rectangle("fill", player.act_x, player.act_y, 30, 30)
 end
