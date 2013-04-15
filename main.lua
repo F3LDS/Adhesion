@@ -18,9 +18,13 @@
 function love.load()
 	facing = 1
   playerspeed = 30 
-        player1 = {{ grid_x = 60, grid_y = 30, act_x = 60, act_y = 30}}
+  player = {}
 	boxblocks = {}
+  switches = {}
 	dtotal = 0
+  notdone = true
+  notdone1 = true
+
 
   loadMap("level1.dat")
 
@@ -45,10 +49,21 @@ end
 function love.update(dt)
 	dtotal = dtotal + dt
 
-  for i,v in ipairs(player1) do
+  for i,v in ipairs(player) do
     v["act_y"] = v["act_y"] - ((v["act_y"] - v["grid_y"]) * playerspeed * dt)
     v["act_x"] = v["act_x"] - ((v["act_x"] - v["grid_x"]) * playerspeed * dt)
+
+    if (round(v["act_y"]) == v["grid_y"]) and (round(v["act_x"]) == v["grid_x"]) then
+      notmoving = true
+    else
+      notmoving = false
+    end
+
   end
+
+
+
+  table.Compare()
 
 end
 
@@ -72,58 +87,71 @@ function love.keypressed(key)
 	if key == " " then
 		shoot()
 	end
-	if key == "up" then
+	if key == "up" and notmoving then
 		if testMap(0, -1) then
-      for i,v in ipairs(player1) do
+      for i,v in ipairs(player) do
         v["grid_y"] = v["grid_y"] - 30
       end
 			facing = 3
 		end
-	end
-	if key == "down" then
+	elseif key == "down" and notmoving then
 		if testMap(0, 1) then
-      for i,v in ipairs(player1) do
+      for i,v in ipairs(player) do
         v["grid_y"] = v["grid_y"] + 30
       end
 			facing = 4
 		end
-	end
-	if key == "left" then
+	elseif key == "left" and notmoving then
 		if testMap(-1, 0) then
-      for i,v in ipairs(player1) do
+      for i,v in ipairs(player) do
         v["grid_x"] = v["grid_x"] - 30
       end
 			facing = 2
 		end
-	end
-	if key == "right" then
+	elseif key == "right" and notmoving then
 		if testMap(1, 0) then
-      for i,v in ipairs(player1) do
+      for i,v in ipairs(player) do
         v["grid_x"] = v["grid_x"] + 30
       end
 			facing = 1
 		end
 	end
-  if key == "w" then
-    --table.insert(boxblocks, {x = 360, y = 360})
-    --for i,v in pairs(player) do
-    --  print(i)
-    --end
+end
+
+function table.Compare()
+  for j, w in pairs( boxblocks ) do
+    for i, v in pairs( player ) do
+      --Check Left
+      if ( w["box_x"] - 30 == round(v["act_x"]) ) and ( w["box_y"] == round(v["act_y"]) ) then
+        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
+        table.remove(boxblocks, j)
+      end
+      --Check Right
+      if ( w["box_x"] + 30 == round(v["act_x"]) ) and ( w["box_y"] == round(v["act_y"]) ) then
+        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
+        table.remove(boxblocks, j)
+      end
+      --Check Up
+      if ( w["box_x"] == round(v["act_x"]) ) and ( w["box_y"] + 30 == round(v["act_y"]) ) then
+        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
+        table.remove(boxblocks, j)
+      end
+      --Check Down
+      if ( w["box_x"] == round(v["act_x"]) ) and ( w["box_y"] - 30 == round(v["act_y"]) ) then
+        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
+        table.remove(boxblocks, j)
+      end
+    end
   end
 end
 
---function table.Compare( tbl1, tbl2 )
---    for k, v in pairs( tbl1 ) do
---        if ( tbl2[k] != v ) then return false end
- --   end
-   -- for k, v in pairs( tbl2 ) do
-    --    if ( tbl1[k] != v ) then return false end
-   -- end
-   -- return true
---end
+function round(num, idp)
+  local mult = 10^(idp or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
 
 function testMap(x, y)
-    for i,v in ipairs(player1) do   
+    for i,v in ipairs(player) do   
       if map[(v["grid_y"] / 30) + y +1][(v["grid_x"] / 30) + x+1] == 1 then
           return false
       end
@@ -196,29 +224,48 @@ end
                                          
 ]]
 function love.draw()
-	--love.graphics.print("Table Test: " .. didPass .. " " .. passNum, 0, 0)
 	
-	love.graphics.setColor(0, 0, 255)
-
-
-  for i,v in ipairs(boxblocks) do
-    love.graphics.rectangle("fill", v["x"], v["y"], 30, 30)
-  end
-
+  love.graphics.setColor(0, 0, 255)
 	for y=1, #map do
      	for x=1, #map[y] do
           if map[y][x] == 1 then
             love.graphics.rectangle("fill", x * 30 - 30, y * 30 - 30 , 30, 30)
           elseif map[y][x] == 2 then
-            love.graphics.setColor(255, 0, 0)
-            love.graphics.rectangle("fill", x * 30 - 30, y * 30 - 30, 30, 30)
-            love.graphics.setColor(0, 0, 255)
+            table.insert(switches, {switch_x = x * 30 - 30, switch_y = y * 30 - 30, type = "momentary"})
+          elseif map[y][x] == 3 and notdone then
+            table.insert(player, { grid_x = x * 30 - 30, grid_y = y * 30 - 30, act_x = x * 30 - 30, act_y = y * 30 - 30})
+          elseif map[y][x] == 4 and notdone1 then
+            table.insert(boxblocks, {box_x = x * 30 - 30, box_y = y * 30 - 30, type = "build"})
           end
       end
   end
+ notdone = false
+ notdone1 = false
+ notdone2 = false
 
-  love.graphics.setColor(255,255,255,255)
-  for i,v in ipairs(player1) do
+
+  --Box Blocks
+  love.graphics.setColor(0, 255, 0)
+  for i,v in ipairs(boxblocks) do
+    love.graphics.rectangle("fill", v["box_x"], v["box_y"], 30, 30)
+  end
+
+  --Switches
+  love.graphics.setColor(255,0,0)
+  for i,v in ipairs(switches) do
+    love.graphics.rectangle("fill", v["switch_x"], v["switch_y"], 30, 30)
+  end
+
+  --Player Pieces
+  love.graphics.setColor(255,255,255)
+  for i,v in ipairs(player) do
     love.graphics.rectangle("fill", v["act_x"], v["act_y"], 30, 30)
+  end
+
+
+
+
+  for i,v in ipairs(player) do
+    love.graphics.print("actx: " .. round(v["act_x"]) .. "  acty: " .. round(v["act_y"]) .. " # of Blocks: " .. #boxblocks, 0, 0)
   end
 end
