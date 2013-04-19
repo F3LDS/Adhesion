@@ -15,7 +15,14 @@
 |______/|__/  |__/|__/   \___/  
                                 
 ]]
+
+require 'playerclass'
+require 'map'
+
 function love.load()
+  playerclass = playerclass:new()
+  playerclass:setPosition(60,30)
+  map1 = map:new()
 	facing = 1
   playerspeed = 30 
   player = {}
@@ -26,9 +33,10 @@ function love.load()
   notdone1 = true
 
 
-  loadMap("level1.dat")
+  --loadMap("level1.dat")
+  map1:load("level1.dat")
 
-  love.graphics.setMode(#map[1] * 30, #map * 30)
+  --love.graphics.setMode(#map[1] * 30, #map * 30)
 
 end
 --[[
@@ -87,35 +95,35 @@ function love.keypressed(key)
 	if key == " " then
 		shoot()
 	end
-	if key == "up" and notmoving then
-		if testMap(0, -1) then
+	if key == "up" then
+    if map1:collideTest(0, -1) then
       for i,v in ipairs(player) do
         v["grid_y"] = v["grid_y"] - 30
       end
 			facing = 3
 		end
-	elseif key == "down" and notmoving then
-		if testMap(0, 1) then
+	elseif key == "down" then
+    if map1:collideTest(0, 1) then
       for i,v in ipairs(player) do
         v["grid_y"] = v["grid_y"] + 30
       end
 			facing = 4
 		end
-	elseif key == "left" and notmoving then
-		if testMap(-1, 0) then
+	elseif key == "left" then
+    if map1:collideTest(-1, 0) then
       for i,v in ipairs(player) do
         v["grid_x"] = v["grid_x"] - 30
       end
 			facing = 2
 		end
-	elseif key == "right" and notmoving then
-		if testMap(1, 0) then
+	elseif key == "right" then
+    if map1:collideTest(1, 0) then
       for i,v in ipairs(player) do
         v["grid_x"] = v["grid_x"] + 30
       end
 			facing = 1
 		end
-	end
+  end
 end
 
 function table.Compare()
@@ -148,35 +156,6 @@ end
 function round(num, idp)
   local mult = 10^(idp or 0)
   return math.floor(num * mult + 0.5) / mult
-end
-
-function testMap(x, y)
-    for i,v in ipairs(player) do   
-      if map[(v["grid_y"] / 30) + y +1][(v["grid_x"] / 30) + x+1] == 1 then
-          return false
-      end
-    end
-    return true
-end
-
-function loadMap(mapfile)
-  local file = io.open(mapfile, "r");
-  local innertemp = {}
-  local final = {}
-  local linenum = 0
-  for line in file:lines() do -- For each line in the map file
-    linenum = linenum + 1
-    stringline = line -- store it in the stringline variable
-    for i = 1, string.len(stringline) do -- for each character in each line
-      value = string.sub(stringline, i, i) -- store it in the value variable
-      innertemp[#innertemp + 1] = tonumber(value, 10)
-      if #innertemp == string.len(stringline) then
-            final[#final + 1] = innertemp
-            innertemp = {}
-      end
-    end
-  end
-map = final
 end
 
 function printTable(t)
@@ -225,8 +204,11 @@ end
 ]]
 function love.draw()
 	
+  playerclass:draw()
+  map1:draw()
+
   love.graphics.setColor(0, 0, 255)
-	for y=1, #map do
+	--[[for y=1, #map do
      	for x=1, #map[y] do
           if map[y][x] == 1 then
             love.graphics.rectangle("fill", x * 30 - 30, y * 30 - 30 , 30, 30)
@@ -238,7 +220,7 @@ function love.draw()
             table.insert(boxblocks, {box_x = x * 30 - 30, box_y = y * 30 - 30, type = "build"})
           end
       end
-  end
+  end]]
  notdone = false
  notdone1 = false
  notdone2 = false
