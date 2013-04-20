@@ -32,11 +32,7 @@ function love.load()
   notdone = true
   notdone1 = true
 
-
-  --loadMap("level1.dat")
   map1:load("level1.dat")
-
-  --love.graphics.setMode(#map[1] * 30, #map * 30)
 
 end
 --[[
@@ -126,9 +122,9 @@ function love.keypressed(key)
   end
 end
 
-function table.Compare()
-  for j, w in pairs( boxblocks ) do
-    for i, v in pairs( player ) do
+function table.Compare() 
+  for i, v in pairs( player ) do
+    for j, w in pairs( boxblocks ) do
       --Check Left
       if ( w["box_x"] - 30 == round(v["act_x"]) ) and ( w["box_y"] == round(v["act_y"]) ) then
         table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
