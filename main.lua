@@ -18,9 +18,12 @@
 
 require 'playerclass'
 require 'map'
+require 'particle'
+require 'collision'
 
 function love.load()
   playerclass = playerclass:new()
+  particle = particle:new()
   playerclass:setPosition(60,30)
   map1 = map:new()
 	facing = 1
@@ -28,11 +31,18 @@ function love.load()
   player = {}
 	boxblocks = {}
   switches = {}
+  colorblocks = {}
 	dtotal = 0
-  notdone = true
-  notdone1 = true
+  win = false
+  test = 0
+  activecount = 0
+  debug = false
+  loadedmap = "none"
 
-  map1:load("level1.dat")
+  map1:load("menu.dat")
+  loadedmap = "menu"
+
+
 
 end
 --[[
@@ -54,20 +64,33 @@ function love.update(dt)
 	dtotal = dtotal + dt
 
   for i,v in ipairs(player) do
-    v["act_y"] = v["act_y"] - ((v["act_y"] - v["grid_y"]) * playerspeed * dt)
-    v["act_x"] = v["act_x"] - ((v["act_x"] - v["grid_x"]) * playerspeed * dt)
-
-    if (round(v["act_y"]) == v["grid_y"]) and (round(v["act_x"]) == v["grid_x"]) then
-      notmoving = true
-    else
-      notmoving = false
-    end
-
+    v["act_y"] = round(v["act_y"]) - ((round(v["act_y"]) - v["grid_y"]) * playerspeed * dt)
+    v["act_x"] = round(v["act_x"]) - ((round(v["act_x"]) - v["grid_x"]) * playerspeed * dt)
   end
 
+  for i,v in ipairs(colorblocks) do
+    v["r"] = round(v["r"]) - ((round(v["r"]) - v["r_final"]) * 5 * dt)
+    v["g"] = round(v["g"]) - ((round(v["g"]) - v["g_final"]) * 5 * dt)
+    v["b"] = round(v["b"]) - ((round(v["b"]) - v["b_final"]) * 5 * dt)
+  end
 
+  if dtotal >= .1 then
+      dtotal = round(dtotal - .1)
+      for i,v in ipairs(colorblocks) do
+        v["r_final"] = math.random(0, 255)
+        v["g_final"] = math.random(0, 255)
+        v["b_final"] = math.random(0, 255)
+      end
+  end
 
-  table.Compare()
+  if (loadedmap == "menu") then
+    collision:menu()
+  else
+    collision:switches()
+  end
+
+  collision:blocks()
+  particle:update(dt)
 
 end
 
@@ -119,33 +142,11 @@ function love.keypressed(key)
       end
 			facing = 1
 		end
-  end
-end
-
-function table.Compare() 
-  for i, v in pairs( player ) do
-    for j, w in pairs( boxblocks ) do
-      --Check Left
-      if ( w["box_x"] - 30 == round(v["act_x"]) ) and ( w["box_y"] == round(v["act_y"]) ) then
-        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
-        table.remove(boxblocks, j)
-      end
-      --Check Right
-      if ( w["box_x"] + 30 == round(v["act_x"]) ) and ( w["box_y"] == round(v["act_y"]) ) then
-        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
-        table.remove(boxblocks, j)
-      end
-      --Check Up
-      if ( w["box_x"] == round(v["act_x"]) ) and ( w["box_y"] + 30 == round(v["act_y"]) ) then
-        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
-        table.remove(boxblocks, j)
-      end
-      --Check Down
-      if ( w["box_x"] == round(v["act_x"]) ) and ( w["box_y"] - 30 == round(v["act_y"]) ) then
-        table.insert(player, { grid_x = w["box_x"], grid_y = w["box_y"], act_x = w["box_x"], act_y = w["box_y"]})
-        table.remove(boxblocks, j)
-      end
-    end
+  elseif key == "escape" then
+    map1:load("menu.dat")
+    loadedmap = "menu"
+  elseif key == "o" then
+    map1:load("level1.dat")
   end
 end
 
@@ -170,24 +171,6 @@ end
 
 --[[
 
-  /$$$$$$            /$$ /$$ /$$           /$$                    
- /$$__  $$          | $$| $$|__/          |__/                    
-| $$  \__/  /$$$$$$ | $$| $$ /$$  /$$$$$$$ /$$  /$$$$$$  /$$$$$$$ 
-| $$       /$$__  $$| $$| $$| $$ /$$_____/| $$ /$$__  $$| $$__  $$
-| $$      | $$  \ $$| $$| $$| $$|  $$$$$$ | $$| $$  \ $$| $$  \ $$
-| $$    $$| $$  | $$| $$| $$| $$ \____  $$| $$| $$  | $$| $$  | $$
-|  $$$$$$/|  $$$$$$/| $$| $$| $$ /$$$$$$$/| $$|  $$$$$$/| $$  | $$
- \______/  \______/ |__/|__/|__/|_______/ |__/ \______/ |__/  |__/
-                                                                  
-]]
-
-
-
-function adhesion()
-end
-
---[[
-
  /$$$$$$$                                  
 | $$__  $$                                 
 | $$  \ $$  /$$$$$$  /$$$$$$  /$$  /$$  /$$
@@ -199,28 +182,16 @@ end
                                          
 ]]
 function love.draw()
-	
+
+  particle:draw()
   playerclass:draw()
   map1:draw()
 
-  love.graphics.setColor(0, 0, 255)
-	--[[for y=1, #map do
-     	for x=1, #map[y] do
-          if map[y][x] == 1 then
-            love.graphics.rectangle("fill", x * 30 - 30, y * 30 - 30 , 30, 30)
-          elseif map[y][x] == 2 then
-            table.insert(switches, {switch_x = x * 30 - 30, switch_y = y * 30 - 30, type = "momentary"})
-          elseif map[y][x] == 3 and notdone then
-            table.insert(player, { grid_x = x * 30 - 30, grid_y = y * 30 - 30, act_x = x * 30 - 30, act_y = y * 30 - 30})
-          elseif map[y][x] == 4 and notdone1 then
-            table.insert(boxblocks, {box_x = x * 30 - 30, box_y = y * 30 - 30, type = "build"})
-          end
-      end
-  end]]
- notdone = false
- notdone1 = false
- notdone2 = false
-
+  
+  for i,v in ipairs(colorblocks) do
+    love.graphics.setColor(v["r"], v["g"], v["b"])
+    love.graphics.rectangle("fill", v["box_x"], v["box_y"], 30, 30)
+  end
 
   --Box Blocks
   love.graphics.setColor(0, 255, 0)
@@ -240,10 +211,17 @@ function love.draw()
     love.graphics.rectangle("fill", v["act_x"], v["act_y"], 30, 30)
   end
 
+  if win == true then
+    love.graphics.print("WINNER", 120, 275, 50, 10)
+    love.graphics.print("WIN", 0, 30)
+  end
 
-
-
-  for i,v in ipairs(player) do
-    love.graphics.print("actx: " .. round(v["act_x"]) .. "  acty: " .. round(v["act_y"]) .. " # of Blocks: " .. #boxblocks, 0, 0)
+  if (debug == true) then
+    for i,v in ipairs(player) do
+      local pos = 0
+      love.graphics.print("Players: " .. #player .. "  Blocks: " .. #boxblocks .. " Switches: " .. #switches .. " Colorblocks: "..#colorblocks, 0, 0)
+      love.graphics.print("Player act_x: " .. v["act_x"] .. "  Player act_y: " .. v["act_y"], 300, 0)
+      love.graphics.print("Tick Time: " .. dtotal, 0, 15)
+    end
   end
 end

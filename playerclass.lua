@@ -13,5 +13,5 @@ function playerclass:setPosition(x, y)
 end
 
 function playerclass:draw()
-   love.graphics.rectangle("fill", self.x, self.y, 30, 30)
+   --love.graphics.rectangle("fill", self.x, self.y, 30, 30)
 end

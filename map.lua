@@ -2,12 +2,30 @@ require 'class'
 
 map = class:new()
 
-function playerclass:init()
+function map:init()
 	currentmap = {}
+  notdone = true
+  notdone1 = true
+  notdone2 = true
+  notdone3 = true
 end
 
 
 function map:load(file)
+
+  --RESET
+  currentmap = {}
+  player = {}
+  boxblocks = {}
+  switches = {}
+  colorblocks = {}
+  win = false
+  activecount = 0
+  notdone = true
+  notdone1 = true
+  notdone2 = true
+  notdone3 = true
+
 	local file = io.open(file, "r");
 	local innertemp = {}
 	local final = {}
@@ -26,6 +44,7 @@ function map:load(file)
   	end
 	currentmap = final
 	love.graphics.setMode(#currentmap[1] * 30, #currentmap * 30)
+  loadedmap = file
 end
 
 
@@ -40,23 +59,25 @@ end
 
 
 function map:draw()
-
   love.graphics.setColor(0, 0, 255)
 	for y=1, #currentmap do
     	for x=1, #currentmap[y] do
     	if currentmap[y][x] == 1 then
         	love.graphics.rectangle("fill", x * 30 - 30, y * 30 - 30 , 30, 30)
-        elseif currentmap[y][x] == 2 then
-            table.insert(switches, {switch_x = x * 30 - 30, switch_y = y * 30 - 30, type = "momentary"})
+        elseif currentmap[y][x] == 2  and notdone2 then
+            table.insert(switches, {switch_x = x * 30 - 30, switch_y = y * 30 - 30, active = false})
         elseif currentmap[y][x] == 3 and notdone then
             table.insert(player, { grid_x = x * 30 - 30, grid_y = y * 30 - 30, act_x = x * 30 - 30, act_y = y * 30 - 30})
         elseif currentmap[y][x] == 4 and notdone1 then
             table.insert(boxblocks, {box_x = x * 30 - 30, box_y = y * 30 - 30, type = "build"})
+        elseif currentmap[y][x] == 5 and notdone3 then
+            table.insert(colorblocks, {box_x = x * 30 - 30, box_y = y * 30 - 30, r = 0, g = 0, b = 0, r_final = 255, g_final = 255, b_final = 255})
         end
       end
 	end
 	notdone = false
 	notdone1 = false
 	notdone2 = false
+  notdone3 = false
 
 end
