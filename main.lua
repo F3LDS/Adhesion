@@ -16,31 +16,30 @@
                                 
 ]]
 
-require 'playerclass'
 require 'map'
 require 'particle'
 require 'collision'
 
 function love.load()
-  playerclass = playerclass:new()
-  particle = particle:new()
-  playerclass:setPosition(60,30)
-  map1 = map:new()
-	facing = 1
-  playerspeed = 30 
-  player = {}
-	boxblocks = {}
-  switches = {}
-  colorblocks = {}
-	dtotal = 0
-  win = false
-  test = 0
-  activecount = 0
-  debug = false
-  loadedmap = "none"
+  particle = particle:new()   -- Create an instance of the particle class
+  map1 = map:new()            -- Create an instance of the map class
+	facing = 1                  -- a variable used to tell which direction the player just moved in
+  playerspeed = 30            -- The multiplier to determine the player's sliding speed
+  player = {}                 -- A table in which we will store each of our players and their attributes
+	boxblocks = {}              -- A table to store all of the collectible blocks in the scene
+  switches = {}               -- A table to store all of the switches in the scene
+  colorblocks = {}            -- Used to store the multicolor blocks used in the main menu
+  walls = {}
+	dtotal = 0                  
+  win = false                 -- Boolean describing whether the level has been won
+  activecount = 0             --
+  debugme = false             -- Set to true in order to see debugging information
+  loadedmap = "none"          -- My version of a gamestate. This will always equal the name of the currently loaded leve
 
-  map1:load("menu.dat")
-  loadedmap = "menu"
+
+
+  map1:load("menu.dat")       -- Load the menu.dat level file for our menu scene
+  loadedmap = "menu"          -- And set our "game state" to menu
 
 
 
@@ -111,42 +110,44 @@ end
 ]]
 
 function love.keypressed(key)
-	if key == " " then
-		shoot()
-	end
-	if key == "up" then
-    if map1:collideTest(0, -1) then
-      for i,v in ipairs(player) do
-        v["grid_y"] = v["grid_y"] - 30
-      end
-			facing = 3
-		end
-	elseif key == "down" then
-    if map1:collideTest(0, 1) then
-      for i,v in ipairs(player) do
-        v["grid_y"] = v["grid_y"] + 30
-      end
-			facing = 4
-		end
-	elseif key == "left" then
-    if map1:collideTest(-1, 0) then
-      for i,v in ipairs(player) do
-        v["grid_x"] = v["grid_x"] - 30
-      end
-			facing = 2
-		end
-	elseif key == "right" then
-    if map1:collideTest(1, 0) then
-      for i,v in ipairs(player) do
-        v["grid_x"] = v["grid_x"] + 30
-      end
-			facing = 1
-		end
-  elseif key == "escape" then
-    map1:load("menu.dat")
-    loadedmap = "menu"
-  elseif key == "o" then
-    map1:load("level1.dat")
+  if win == false then
+	    if key == " " then
+		  shoot()
+	  end
+	  if key == "up" then
+      if map1:collideTest(0, -1) then
+        for i,v in ipairs(player) do
+          v["grid_y"] = v["grid_y"] - 30
+        end
+			  facing = 3
+		  end
+	  elseif key == "down" then
+      if map1:collideTest(0, 1) then
+        for i,v in ipairs(player) do
+          v["grid_y"] = v["grid_y"] + 30
+        end
+			  facing = 4
+		  end
+	  elseif key == "left" then
+      if map1:collideTest(-1, 0) then
+        for i,v in ipairs(player) do
+          v["grid_x"] = v["grid_x"] - 30
+        end
+			  facing = 2
+		  end
+	  elseif key == "right" then
+      if map1:collideTest(1, 0) then
+        for i,v in ipairs(player) do
+          v["grid_x"] = v["grid_x"] + 30
+        end
+			  facing = 1
+		  end
+    elseif key == "escape" then
+      map1:load("menu.dat")
+      loadedmap = "menu"
+    elseif key == "r" then
+      map:win()
+    end
   end
 end
 
@@ -184,39 +185,9 @@ end
 function love.draw()
 
   particle:draw()
-  playerclass:draw()
   map1:draw()
 
-  
-  for i,v in ipairs(colorblocks) do
-    love.graphics.setColor(v["r"], v["g"], v["b"])
-    love.graphics.rectangle("fill", v["box_x"], v["box_y"], 30, 30)
-  end
-
-  --Box Blocks
-  love.graphics.setColor(0, 255, 0)
-  for i,v in ipairs(boxblocks) do
-    love.graphics.rectangle("fill", v["box_x"], v["box_y"], 30, 30)
-  end
-
-  --Switches
-  love.graphics.setColor(255,0,0)
-  for i,v in ipairs(switches) do
-    love.graphics.rectangle("fill", v["switch_x"], v["switch_y"], 30, 30)
-  end
-
-  --Player Pieces
-  love.graphics.setColor(255,255,255)
-  for i,v in ipairs(player) do
-    love.graphics.rectangle("fill", v["act_x"], v["act_y"], 30, 30)
-  end
-
-  if win == true then
-    love.graphics.print("WINNER", 120, 275, 50, 10)
-    love.graphics.print("WIN", 0, 30)
-  end
-
-  if (debug == true) then
+  if (debugme == true) then
     for i,v in ipairs(player) do
       local pos = 0
       love.graphics.print("Players: " .. #player .. "  Blocks: " .. #boxblocks .. " Switches: " .. #switches .. " Colorblocks: "..#colorblocks, 0, 0)

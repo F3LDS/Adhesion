@@ -59,7 +59,6 @@ function particle:emit(x, y, x1, y1)
    	self.y = y
    	self.x1 = x1
    	self.y1 = y1
-   	print("EMITTING at " .. self.x .. " " .. self.y .. " and " .. self.x1 .. " " .. self.y1)
    	p1:start()
    	p2:start()
 end

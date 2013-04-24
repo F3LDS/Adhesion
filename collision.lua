@@ -16,7 +16,7 @@ collision = class:new()
 ]]
 
 
-function playerclass:init()
+function collision:init()
 	switchcounter = 0
 end
 
@@ -62,6 +62,15 @@ function collision:menu()
         if (j == 2) then
         	map:load("level1.dat")
         end
+        if (j == 4) then
+          map:load("level2.dat")
+        end
+        if (j == 5) then
+          map:load("level3.dat")
+        end
+        if (j == 6) then
+          map:load("level4.dat")
+        end
       end
     end
   end
@@ -90,14 +99,17 @@ function switchCheck()
     end
     if (activecount == #switches) then
       win = true
+      if runonce == false then
+        map:win()
+      end
+      runonce = true
       switchcounter = switchcounter + 1
-      print("adding")
-      print(switchcounter)
       if switchcounter > 100 then
       	map:load("menu.dat")
       	loadedmap = "menu"
       end
     else
+      runonce = false
       win = false
       switchcounter = 0
     end
